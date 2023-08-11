@@ -1,7 +1,7 @@
 #!/bin/sh
 
-ACCOUNT_ID=""
-REGION=""
+ACCOUNT_ID="868686364197"
+REGION="us-west-2"
 PREFIX=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
 # Check if the environment variable is set
