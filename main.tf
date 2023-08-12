@@ -88,26 +88,36 @@ resource "aws_route" "public_internet_gateway" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
+
+  depends_on = [aws_route_table.public]
 }
 
 resource "aws_route_table_association" "public_a" {
   route_table_id = aws_route_table.public.id
   subnet_id      = aws_subnet.public_a.id
+
+  depends_on = [aws_route_table.public]
 }
 
 resource "aws_route_table_association" "public_b" {
   route_table_id = aws_route_table.public.id
   subnet_id      = aws_subnet.public_b.id
+
+  depends_on = [aws_route_table.public]
 }
 
 resource "aws_route_table_association" "private_a" {
   route_table_id = aws_route_table.private.id
   subnet_id      = aws_subnet.private_a.id
+
+  depends_on = [aws_route_table.private]
 }
 
 resource "aws_route_table_association" "private_b" {
   route_table_id = aws_route_table.private.id
   subnet_id      = aws_subnet.private_b.id
+
+  depends_on = [aws_route_table.private]
 }
 
 /*==== VPC's Default Security Group ======*/
@@ -123,6 +133,19 @@ resource "aws_security_group" "default" {
     protocol  = "-1"
     self      = true
   }
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_log_group" "dlwb" {
+  name = "/ecs/dlwb"
+
+  tags = var.tags
+}
+
+resource "aws_ecs_cluster" "dlwb_fargate" {
+  name       = "dlwb_fargate"
+  depends_on = [aws_cloudwatch_log_group.dlwb]
 
   tags = var.tags
 }
