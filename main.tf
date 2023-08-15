@@ -142,15 +142,8 @@ resource "aws_default_security_group" "default" {
   tags = var.tags
 }
 
-resource "aws_cloudwatch_log_group" "dlwb" {
-  name              = "/ecs/dlwb"
-  retention_in_days = 1
-  tags              = var.tags
-}
-
 resource "aws_ecs_cluster" "dlwb_fargate" {
   name       = "dlwb_fargate"
-  depends_on = [aws_cloudwatch_log_group.dlwb]
 
   tags = var.tags
 }
