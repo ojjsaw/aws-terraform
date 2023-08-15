@@ -57,7 +57,7 @@ resource "aws_lb_target_group" "sso_alb_tg" {
 
 resource "aws_lb_target_group" "omz_alb_tg" {
   name        = "omz-alb-tg"
-  port        = 8888
+  port        = 443
   protocol    = "HTTPS"
   target_type = "ip"
   vpc_id      = aws_vpc.main.id
@@ -71,7 +71,7 @@ resource "aws_lb_target_group" "omz_alb_tg" {
   tags = var.tags
 }
 
-resource "aws_lb_listener" "sso_alb_listener" {
+resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "443"
   protocol          = "HTTPS"
@@ -86,23 +86,8 @@ resource "aws_lb_listener" "sso_alb_listener" {
   tags = var.tags
 }
 
-resource "aws_lb_listener" "omz_alb_listener" {
-  load_balancer_arn = aws_lb.alb.arn
-  port              = "8888"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = var.CERTIFICATE
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.omz_alb_tg.arn
-  }
-
-  tags = var.tags
-}
-
 resource "aws_lb_listener_rule" "sso_rule" {
-  listener_arn = aws_lb_listener.sso_alb_listener.arn
+  listener_arn = aws_lb_listener.alb_listener.arn
   priority     = 100
 
   action {
@@ -120,8 +105,8 @@ resource "aws_lb_listener_rule" "sso_rule" {
 }
 
 resource "aws_lb_listener_rule" "omz_rule" {
-  listener_arn = aws_lb_listener.omz_alb_listener.arn
-  priority     = 100
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 99
 
   action {
     type             = "forward"
@@ -202,4 +187,4 @@ output "nlb_ip_address" {
 
 output "alb_ip_address" {
   value = aws_lb.nlb.dns_name
-} 
+}

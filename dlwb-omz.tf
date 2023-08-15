@@ -23,7 +23,7 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
           value = "dlworkbench"
         },
         {
-          name  = "BUS_URL",
+          name = "BUS_URL",
           #value = "${aws_lb.nlb.dns_name}:4222"
           value = "bus.dlwb:4222"
         },
@@ -46,10 +46,10 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
           valueFrom = "${var.TLS_KEY}"
         }
       ]
-      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && .venv/bin/python server.py --logging=debug --debug --port=8888"]
+      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && .venv/bin/python server.py --logging=debug --debug --port=443"]
       portMappings = [
         {
-          containerPort = 8888
+          containerPort = 443
         }
       ]
       logConfiguration = {
@@ -84,7 +84,7 @@ resource "aws_ecs_service" "dlwb_omz" {
   load_balancer {
     target_group_arn = aws_lb_target_group.omz_alb_tg.arn
     container_name   = "omz"
-    container_port   = 8888
+    container_port   = 443
   }
 
 }
@@ -94,8 +94,8 @@ resource "aws_security_group" "dlwb_omz_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 8888
-    to_port     = 8888
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [aws_subnet.public_a.cidr_block, aws_subnet.public_b.cidr_block]
   }
