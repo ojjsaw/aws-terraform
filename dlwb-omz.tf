@@ -3,6 +3,7 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.fargate_execution.arn
+  depends_on               = [aws_lb.nlb, aws_ecs_service.dlwb_bus]
   runtime_platform {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
@@ -23,7 +24,12 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
         },
         {
           name  = "BUS_URL",
-          value = "ws://${aws_lb.alb.dns_name}:4444"
+          #value = "${aws_lb.nlb.dns_name}:4222"
+          value = "bus.dlwb:4222"
+        },
+        {
+          name  = "test",
+          value = "test"
         }
       ]
       secrets = [
@@ -58,7 +64,6 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
     }
   ])
 
-  depends_on      = [aws_lb.alb]
   tags = var.tags
 }
 

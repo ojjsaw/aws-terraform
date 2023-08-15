@@ -16,12 +16,10 @@ resource "aws_ecs_task_definition" "dlwb_bus" {
       name      = "bus"
       image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-bus:runtime"
       essential = true
+      command   = ["-js", "-D"]
       portMappings = [
         {
           containerPort = 4222
-        },
-        {
-          containerPort = 4444
         }
       ]
       logConfiguration = {
@@ -45,7 +43,7 @@ resource "aws_ecs_service" "dlwb_bus" {
   task_definition = aws_ecs_task_definition.dlwb_bus.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-  depends_on      = [aws_iam_role.fargate_execution]
+  depends_on      = [aws_iam_role.fargate_execution, aws_service_discovery_service.bus]
 
   network_configuration {
     subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
@@ -54,9 +52,9 @@ resource "aws_ecs_service" "dlwb_bus" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.bus_alb_tg.arn
+    target_group_arn = aws_lb_target_group.bus_nlb_tg.arn
     container_name   = "bus"
-    container_port   = 4444
+    container_port   = 4222
   }
 
   service_registries {
@@ -70,17 +68,11 @@ resource "aws_security_group" "dlwb_bus_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 4444
-    to_port     = 4444
-    protocol    = "tcp"
-    cidr_blocks = [aws_subnet.public_a.cidr_block, aws_subnet.public_b.cidr_block]
-  }
-
-  ingress {
     from_port   = 4222
     to_port     = 4222
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.private_a.cidr_block, aws_subnet.private_b.cidr_block]
+    cidr_blocks = ["0.0.0.0/0"]
+    #cidr_blocks = [aws_subnet.public_a.cidr_block, aws_subnet.public_b.cidr_block]
   }
 
   egress {

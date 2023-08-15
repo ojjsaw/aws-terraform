@@ -17,13 +17,6 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    protocol    = "tcp"
-    from_port   = 4444
-    to_port     = 4444
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     protocol    = "-1"
     from_port   = 0
@@ -78,22 +71,6 @@ resource "aws_lb_target_group" "omz_alb_tg" {
   tags = var.tags
 }
 
-resource "aws_lb_target_group" "bus_alb_tg" {
-  name        = "bus-alb-tg"
-  port        = 4444
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = aws_vpc.main.id
-
-  health_check {
-    interval = "30"
-    protocol = "HTTP"
-    path     = "/healthcheck"
-  }
-
-  tags = var.tags
-}
-
 resource "aws_lb_listener" "sso_alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "443"
@@ -119,19 +96,6 @@ resource "aws_lb_listener" "omz_alb_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.omz_alb_tg.arn
-  }
-
-  tags = var.tags
-}
-
-resource "aws_lb_listener" "bus_alb_listener" {
-  load_balancer_arn = aws_lb.alb.arn
-  port              = "4444"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.bus_alb_tg.arn
   }
 
   tags = var.tags
@@ -173,21 +137,69 @@ resource "aws_lb_listener_rule" "omz_rule" {
   tags = var.tags
 }
 
-resource "aws_lb_listener_rule" "bus_rule" {
-  listener_arn = aws_lb_listener.bus_alb_listener.arn
-  priority     = 100
 
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.bus_alb_tg.arn
+/* Network Load Balancer */
+resource "aws_security_group" "nlb" {
+  name   = "dlwb-nlb-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 4222
+    to_port     = 4222
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  condition {
-    path_pattern {
-      values = ["/"]
-    }
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = var.tags
 }
 
+resource "aws_lb" "nlb" {
+  name               = "dlwb-nlb"
+  internal           = false
+  load_balancer_type = "network"
+  security_groups    = [aws_security_group.nlb.id]
+  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+  #enable_cross_zone_load_balancing = true
+
+  enable_deletion_protection = false
+
+  tags = var.tags
+}
+
+resource "aws_lb_target_group" "bus_nlb_tg" {
+  name        = "bus-nlb-tg"
+  port        = 4222
+  protocol    = "TCP"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener" "bus_nlb_listener" {
+  load_balancer_arn = aws_lb.nlb.arn
+  port              = 4222
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.bus_nlb_tg.arn
+  }
+
+  tags = var.tags
+}
+
+output "nlb_ip_address" {
+  value = aws_lb.alb.dns_name
+}
+
+output "alb_ip_address" {
+  value = aws_lb.nlb.dns_name
+} 

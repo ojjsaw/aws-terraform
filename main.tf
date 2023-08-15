@@ -121,26 +121,31 @@ resource "aws_route_table_association" "private_b" {
 }
 
 /*==== VPC's Default Security Group ======*/
-resource "aws_security_group" "default" {
-  name        = "dlwb-default-sg"
-  description = "Default security group to allow inbound/outbound from the VPC"
-  vpc_id      = aws_vpc.main.id
-  depends_on  = [aws_vpc.main]
+resource "aws_default_security_group" "default" {
+  #name        = "dlwb-default-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port = "0"
-    to_port   = "0"
-    protocol  = "-1"
-    self      = true
+    from_port   = "0"
+    to_port     = "0"
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "dlwb" {
-  name = "/ecs/dlwb"
-
-  tags = var.tags
+  name              = "/ecs/dlwb"
+  retention_in_days = 1
+  tags              = var.tags
 }
 
 resource "aws_ecs_cluster" "dlwb_fargate" {

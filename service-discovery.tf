@@ -13,7 +13,7 @@ resource "aws_service_discovery_service" "bus" {
     namespace_id = aws_service_discovery_private_dns_namespace.dlwb.id
 
     dns_records {
-      ttl  = 10
+      ttl  = 300
       type = "A"
     }
 
@@ -22,4 +22,3 @@ resource "aws_service_discovery_service" "bus" {
 
   tags = var.tags
 }
-
