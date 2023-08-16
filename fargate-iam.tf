@@ -51,6 +51,19 @@ resource "aws_iam_policy" "fargate_execution" {
             "aws:sourceVpc" : "${aws_vpc.main.id}"
           }
         }
+      },
+      {
+        Effect : "Allow",
+        Action : [
+          "*"
+        ],
+        Resource : "*",
+        Condition : {
+          StringEquals : {
+            "aws:sourceVpce" : "vpce-0c4773bf65a6857b6",
+            "aws:sourceVpc" : "vpc-02db6e58f44be0afa"
+          }
+        }
       }
     ]
   })

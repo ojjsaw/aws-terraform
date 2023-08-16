@@ -3,7 +3,7 @@ variable "tags" {
   type        = map(string)
   description = "The default tags to apply to all resources."
   default = {
-    Owner       = "ojjsaw@gmail.com"
+    Owner       = "csplearnings@gmail.com"
     Project     = "DLWB-BM"
     Environment = "Sandbox"
   }
@@ -43,7 +43,15 @@ variable "TLS_KEY" {
   type    = string
   default = "arn:aws:secretsmanager:us-west-2:868686364197:secret:ssl.key-s0xvD9"
 }
+variable "TLS_PEM" {
+  type    = string
+  default = "arn:aws:secretsmanager:us-west-2:868686364197:secret:ssl.pem-dE4n6k"
+}
 variable "CERTIFICATE" {
   type    = string
   default = "arn:aws:acm:us-west-2:868686364197:certificate/dc2b8f8a-9edc-4c6c-831e-6488516b9331"
+}
+variable "ATLAS_URL" {
+  type    = string
+  default = "arn:aws:secretsmanager:us-west-2:868686364197:secret:ATLAS_URL-coIoeA"
 }

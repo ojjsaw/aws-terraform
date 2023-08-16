@@ -39,6 +39,22 @@ resource "aws_lb" "alb" {
   tags = var.tags
 }
 
+resource "aws_lb_target_group" "client_alb_tg" {
+  name        = "client-alb-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  health_check {
+    interval = "30"
+    protocol = "HTTP"
+    path     = "/"
+  }
+
+  tags = var.tags
+}
+
 resource "aws_lb_target_group" "sso_alb_tg" {
   name        = "sso-alb-tg"
   port        = 443
@@ -71,6 +87,38 @@ resource "aws_lb_target_group" "omz_alb_tg" {
   tags = var.tags
 }
 
+resource "aws_lb_target_group" "benchmark_alb_tg" {
+  name        = "benchmark-alb-tg"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  health_check {
+    interval = "30"
+    protocol = "HTTPS"
+    path     = "/api/benchmark/swagger/spec.html"
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_target_group" "project_alb_tg" {
+  name        = "project-alb-tg"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  health_check {
+    interval = "30"
+    protocol = "HTTPS"
+    path     = "/api/project/swagger/spec.html"
+  }
+
+  tags = var.tags
+}
+
 resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "443"
@@ -81,6 +129,24 @@ resource "aws_lb_listener" "alb_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.sso_alb_tg.arn
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener_rule" "client_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 101
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.client_alb_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/"]
+    }
   }
 
   tags = var.tags
@@ -122,6 +188,41 @@ resource "aws_lb_listener_rule" "omz_rule" {
   tags = var.tags
 }
 
+resource "aws_lb_listener_rule" "project_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 98
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.project_alb_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/project/*"]
+    }
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener_rule" "benchmark_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 97
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.benchmark_alb_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/benchmark/*"]
+    }
+  }
+
+  tags = var.tags
+}
 
 /* Network Load Balancer */
 resource "aws_security_group" "nlb" {
