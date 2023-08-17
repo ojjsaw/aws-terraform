@@ -3,7 +3,7 @@ resource "aws_ecs_task_definition" "dlwb_benchmark" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.fargate_execution.arn
-  depends_on               = [aws_lb.nlb, aws_ecs_service.dlwb_bus]
+  depends_on               = [aws_ecs_service.dlwb_bus]
   runtime_platform {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
@@ -24,7 +24,6 @@ resource "aws_ecs_task_definition" "dlwb_benchmark" {
         },
         {
           name = "BUS_URL",
-          #value = "${aws_lb.nlb.dns_name}:4222"
           value = "bus.dlwb:4222"
         },
         {

@@ -119,6 +119,26 @@ resource "aws_lb_target_group" "project_alb_tg" {
   tags = var.tags
 }
 
+resource "aws_lb_listener" "non_https_listener" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      host = "#{host}"
+      port = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+      query = "#{query}"
+    }
+  }
+
+  tags = var.tags
+}
+
 resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "443"
@@ -129,6 +149,28 @@ resource "aws_lb_listener" "alb_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.sso_alb_tg.arn
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener_rule" "auth_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 150
+
+  action {
+    type = "redirect"
+
+    redirect {
+      path = "/api/sso/swagger/spec.html"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }    
   }
 
   tags = var.tags
@@ -145,7 +187,14 @@ resource "aws_lb_listener_rule" "client_rule" {
 
   condition {
     path_pattern {
-      values = ["/"]
+      values = ["/*"]
+    }
+  }
+
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values = [ "*dlworkbench*" ]
     }
   }
 
@@ -185,6 +234,13 @@ resource "aws_lb_listener_rule" "omz_rule" {
     }
   }
 
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values = [ "*dlworkbench*" ]
+    }
+  }
+
   tags = var.tags
 }
 
@@ -203,6 +259,13 @@ resource "aws_lb_listener_rule" "project_rule" {
     }
   }
 
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values = [ "*dlworkbench*" ]
+    }
+  }
+
   tags = var.tags
 }
 
@@ -218,6 +281,13 @@ resource "aws_lb_listener_rule" "benchmark_rule" {
   condition {
     path_pattern {
       values = ["/api/benchmark/*"]
+    }
+  }
+
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values = [ "*dlworkbench*" ]
     }
   }
 
@@ -283,9 +353,9 @@ resource "aws_lb_listener" "bus_nlb_listener" {
 }
 
 output "nlb_ip_address" {
-  value = aws_lb.alb.dns_name
+  value = aws_lb.nlb.dns_name
 }
 
 output "alb_ip_address" {
-  value = aws_lb.nlb.dns_name
+  value = aws_lb.alb.dns_name
 }

@@ -3,7 +3,7 @@ resource "aws_ecs_task_definition" "dlwb_client" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.fargate_execution.arn
-  depends_on               = [aws_lb.nlb, aws_ecs_service.dlwb_bus]
+
   runtime_platform {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
@@ -44,7 +44,7 @@ resource "aws_ecs_service" "dlwb_client" {
   task_definition = aws_ecs_task_definition.dlwb_client.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-  depends_on      = [aws_iam_role.fargate_execution, aws_ecs_service.dlwb_bus]
+  depends_on      = [aws_iam_role.fargate_execution]
 
   network_configuration {
     subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
@@ -77,6 +77,6 @@ resource "aws_security_group" "dlwb_client_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  
   tags = var.tags
 }
