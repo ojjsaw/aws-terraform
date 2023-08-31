@@ -8,10 +8,10 @@ resource "aws_ecs_task_definition" "dlwb_omz" {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
   }
-  # 1 vCPU
-  cpu = 1024
-  # 2 GB
-  memory = 2048
+  # 0.25 vCPU
+  cpu = 256
+  # 1 GB
+  memory = 1024
   container_definitions = jsonencode([
     {
       name      = "omz"

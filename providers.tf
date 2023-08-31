@@ -1,3 +1,5 @@
+# TODO: MongoDB not yet Automated, comment out dlwb-project.tf and apply after manual Atlas setup
+# TODO: Terraform s3 backend
 terraform {
   required_providers {
     aws = {
