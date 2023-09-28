@@ -39,6 +39,9 @@ resource "aws_lb" "alb" {
   tags = var.tags
 }
 
+
+/* ALB Target Groups */
+
 resource "aws_lb_target_group" "client_alb_tg" {
   name        = "client-alb-tg"
   port        = 3000
@@ -87,6 +90,22 @@ resource "aws_lb_target_group" "omz_alb_tg" {
   tags = var.tags
 }
 
+resource "aws_lb_target_group" "optimize_alb_tg" {
+  name        = "optimize-alb-tg"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  health_check {
+    interval = "30"
+    protocol = "HTTPS"
+    path     = "/api/optimize/swagger/spec.html"
+  }
+
+  tags = var.tags
+}
+
 resource "aws_lb_target_group" "benchmark_alb_tg" {
   name        = "benchmark-alb-tg"
   port        = 443
@@ -119,6 +138,23 @@ resource "aws_lb_target_group" "project_alb_tg" {
   tags = var.tags
 }
 
+resource "aws_lb_target_group" "fs_alb_tg" {
+  name        = "fs-alb-tg"
+  port        = 443
+  protocol    = "HTTPS"
+  target_type = "ip"
+  vpc_id      = aws_vpc.main.id
+
+  health_check {
+    interval = "30"
+    protocol = "HTTPS"
+    path     = "/api/fs/swagger/spec.html"
+  }
+
+  tags = var.tags
+}
+
+/* ALB Listeners */
 resource "aws_lb_listener" "non_https_listener" {
   load_balancer_arn = aws_lb.alb.arn
   port              = "80"
@@ -128,11 +164,11 @@ resource "aws_lb_listener" "non_https_listener" {
     type = "redirect"
 
     redirect {
-      host = "#{host}"
-      port = "443"
+      host        = "#{host}"
+      port        = "443"
       protocol    = "HTTPS"
       status_code = "HTTP_301"
-      query = "#{query}"
+      query       = "#{query}"
     }
   }
 
@@ -154,6 +190,8 @@ resource "aws_lb_listener" "alb_listener" {
   tags = var.tags
 }
 
+/* ALB Listener Rules */
+
 resource "aws_lb_listener_rule" "auth_rule" {
   listener_arn = aws_lb_listener.alb_listener.arn
   priority     = 150
@@ -162,7 +200,7 @@ resource "aws_lb_listener_rule" "auth_rule" {
     type = "redirect"
 
     redirect {
-      path = "/api/sso/swagger/spec.html"
+      path        = "/api/sso/swagger/spec.html"
       status_code = "HTTP_301"
     }
   }
@@ -170,7 +208,7 @@ resource "aws_lb_listener_rule" "auth_rule" {
   condition {
     path_pattern {
       values = ["/*"]
-    }    
+    }
   }
 
   tags = var.tags
@@ -194,7 +232,7 @@ resource "aws_lb_listener_rule" "client_rule" {
   condition {
     http_header {
       http_header_name = "Cookie"
-      values = [ "*dlworkbench*" ]
+      values           = ["*dlworkbench*"]
     }
   }
 
@@ -237,7 +275,7 @@ resource "aws_lb_listener_rule" "omz_rule" {
   condition {
     http_header {
       http_header_name = "Cookie"
-      values = [ "*dlworkbench*" ]
+      values           = ["*dlworkbench*"]
     }
   }
 
@@ -262,7 +300,7 @@ resource "aws_lb_listener_rule" "project_rule" {
   condition {
     http_header {
       http_header_name = "Cookie"
-      values = [ "*dlworkbench*" ]
+      values           = ["*dlworkbench*"]
     }
   }
 
@@ -287,7 +325,57 @@ resource "aws_lb_listener_rule" "benchmark_rule" {
   condition {
     http_header {
       http_header_name = "Cookie"
-      values = [ "*dlworkbench*" ]
+      values           = ["*dlworkbench*"]
+    }
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener_rule" "fs_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 96
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.fs_alb_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/fs/*"]
+    }
+  }
+
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values           = ["*dlworkbench*"]
+    }
+  }
+
+  tags = var.tags
+}
+
+resource "aws_lb_listener_rule" "optimize_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 95
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.optimize_alb_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/optimize/*"]
+    }
+  }
+
+  condition {
+    http_header {
+      http_header_name = "Cookie"
+      values           = ["*dlworkbench*"]
     }
   }
 

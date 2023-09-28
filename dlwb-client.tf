@@ -15,9 +15,14 @@ resource "aws_ecs_task_definition" "dlwb_client" {
   container_definitions = jsonencode([
     {
       name      = "client"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-client:runtime"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-client:${var.image_tag}"
       essential = true
-      command = ["serve", "-s", "build", "-p", "3000"]
+      environment = [
+        {
+          name  = "CLIENT_BUILD_PATH",
+          value = "${var.CLIENT_BUILD_PATH}"
+        }
+      ]
       portMappings = [
         {
           containerPort = 3000
@@ -77,6 +82,6 @@ resource "aws_security_group" "dlwb_client_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = var.tags
 }

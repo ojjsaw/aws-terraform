@@ -3,7 +3,7 @@ resource "aws_ecs_task_definition" "dlwb_project" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.fargate_execution.arn
-  depends_on               = [aws_lb.nlb, aws_ecs_service.dlwb_bus]
+  depends_on               = [aws_ecs_service.dlwb_bus] #[aws_lb.nlb, aws_ecs_service.dlwb_bus]
   runtime_platform {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "dlwb_project" {
   container_definitions = jsonencode([
     {
       name      = "project"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-project:runtime"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-project:${var.image_tag}"
       essential = true
       environment = [
         {
@@ -41,15 +41,11 @@ resource "aws_ecs_task_definition" "dlwb_project" {
           valueFrom = "${var.TLS_KEY}"
         },
         {
-          name      = "PEM",
-          valueFrom = "${var.TLS_PEM}"
-        },
-        {
           name      = "DB",
           valueFrom = "${var.ATLAS_URL}"
         }
       ]
-      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && echo \"$PEM\" > /var/run/secrets/tls_pem && .venv/bin/python server.py --logging=debug --debug --port=443 --db=\"$DB\""]
+      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && .venv/bin/python server.py --logging=debug --debug --port=443 --db=\"$DB\" --bus=\"$BUS_URL\""]
       portMappings = [
         {
           containerPort = 443

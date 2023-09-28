@@ -14,7 +14,7 @@ resource "aws_ecs_task_definition" "dlwb_sso" {
   container_definitions = jsonencode([
     {
       name      = "sso"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-sso:runtime"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-sso:${var.image_tag}"
       essential = true
       environment = [
         {
@@ -96,6 +96,6 @@ resource "aws_security_group" "dlwb_sso_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = var.tags
 }

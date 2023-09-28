@@ -14,9 +14,19 @@ resource "aws_ecs_task_definition" "dlwb_bus" {
   container_definitions = jsonencode([
     {
       name      = "bus"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-bus:runtime"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-bus:${var.image_tag}"
       essential = true
-      command   = ["-js", "-D"]
+      secrets = [
+        {
+          name      = "CERT",
+          valueFrom = "${var.TLS_CERT}"
+        },
+        {
+          name      = "KEY",
+          valueFrom = "${var.TLS_KEY}"
+        }
+      ]
+      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && nats-server -c /nats-server.conf"]
       portMappings = [
         {
           containerPort = 4222
@@ -81,6 +91,6 @@ resource "aws_security_group" "dlwb_bus_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = var.tags
 }

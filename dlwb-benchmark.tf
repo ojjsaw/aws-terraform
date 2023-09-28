@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "dlwb_benchmark" {
   container_definitions = jsonencode([
     {
       name      = "benchmark"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-benchmark:runtime"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/applications.services.devcloud.workbench-benchmark:${var.image_tag}"
       essential = true
       environment = [
         {
@@ -23,12 +23,8 @@ resource "aws_ecs_task_definition" "dlwb_benchmark" {
           value = "dlworkbench"
         },
         {
-          name = "BUS_URL",
+          name  = "BUS_URL",
           value = "bus.dlwb:4222"
-        },
-        {
-          name  = "test",
-          value = "test"
         }
       ]
       secrets = [
@@ -45,7 +41,7 @@ resource "aws_ecs_task_definition" "dlwb_benchmark" {
           valueFrom = "${var.TLS_KEY}"
         }
       ]
-      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && .venv/bin/python server.py --logging=debug --debug --port=443"]
+      entrypoint = ["/bin/sh", "-c", "mkdir -p /var/run/secrets && echo \"$KEY\" > /var/run/secrets/tls_key && echo \"$CERT\" > /var/run/secrets/tls_cert && echo \"$SECRET\" > /var/run/secrets/cookie_secret && .venv/bin/python server.py --logging=debug --debug --port=443 --bus=\"$BUS_URL\""]
       portMappings = [
         {
           containerPort = 443
