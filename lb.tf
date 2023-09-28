@@ -391,7 +391,7 @@ resource "aws_security_group" "nlb" {
     protocol    = "tcp"
     from_port   = 4222
     to_port     = 4222
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["12.229.61.126/32"]
   }
 
   egress {

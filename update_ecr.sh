@@ -1,10 +1,10 @@
 #!/bin/sh
 
-ACCOUNT_ID="868686364197"
+ACCOUNT_ID="347786937011"
 REGION="us-west-2"
 PREFIX=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 SRC_LOCAL_IMG_TAG="runtime"
-AWS_TARGET_IMG_TAG="runtime_v2"
+AWS_TARGET_IMG_TAG="runtime_spdemo"
 
 # Check if the environment variable is set
 if [ -z "$AWS_ACCESS_KEY_ID" ]; then
